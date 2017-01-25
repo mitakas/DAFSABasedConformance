@@ -19,12 +19,33 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetFactory;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
+import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsGraphAlg;
 //import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsGraphILPAlg;
 import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsTreeAlg;
 import org.processmining.plugins.petrinet.replayresult.PNMatchInstancesRepResult;
 import org.processmining.plugins.replayer.replayresult.AllSyncReplayResult;
 
 import nl.tue.astar.AStarException;
+
+/*
+ * Copyright © 2009-2017 The Apromore Initiative.
+ *
+ * This file is part of "Apromore".
+ *
+ * "Apromore" is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * "Apromore" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program.
+ * If not, see <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ */
 
 public class AlignmentTest 
 {
@@ -146,17 +167,17 @@ public class AlignmentTest
 	public double computeCost(Map<Transition, Integer> costMOS, Map<XEventClass, Integer> costMOT,
 			Marking initialMarking, Marking[] finalMarkings, PluginContext context, PetrinetGraph net, XLog log,
 			TransEvClassMapping mapping, boolean useILP) {
-		AllOptAlignmentsTreeAlg replayEngine;
+		AllOptAlignmentsGraphAlg replayEngine;
 //		if (useILP) {
-			replayEngine = new AllOptAlignmentsTreeAlg();
+//			replayEngine = new AllOptAlignmentsTreeAlg();
 //		} else {
-//			replayEngine = new AllOptAlignmentsGraphAlg();
+			replayEngine = new AllOptAlignmentsGraphAlg();
 //		}
 
 		Object[] parameters = new Object[10]; //new CostBasedCompleteParam(, );
 		parameters[0] = costMOS;
 		parameters[2] = costMOT;
-		parameters[1] = 20000; //10001000;//	parameters.setInitialMarking(initialMarking);
+		parameters[1] = 10001000;//	parameters.setInitialMarking(initialMarking);
 //		parameters.setFinalMarkings(finalMarkings[0]);
 //		parameters.setGUIMode(false);
 //		parameters.setCreateConn(false);

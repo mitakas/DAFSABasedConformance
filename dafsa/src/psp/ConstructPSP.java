@@ -2,7 +2,6 @@ package psp;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 //import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +39,26 @@ import Automaton.Transition;
 import importAutomatonFromLogOrModel.ImportEventLog;
 import importAutomatonFromLogOrModel.ImportProcessModel;
 
+/*
+ * Copyright © 2009-2017 The Apromore Initiative.
+ *
+ * This file is part of "Apromore".
+ *
+ * "Apromore" is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * "Apromore" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program.
+ * If not, see <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ */
+
 public class ConstructPSP {
 	
 	private Automaton logAutomaton;
@@ -74,7 +93,8 @@ public class ConstructPSP {
 		for(int finalState : logAutomaton.finalConfigurations().keySet())
 			for(Multiset<Integer> finalConfiguration : logAutomaton.finalConfigurations().get(finalState))
 				for(IntArrayList potentialPath : logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).keySet())
-					this.calculatePartiallySynchronizedPathWithLeastSkipsFor(finalConfiguration, finalState, potentialPath);
+					//if(potentialPath.containsAll(0,1,15,16, 92, 151, 119, 117, 108, 5))
+						this.calculatePartiallySynchronizedPathWithLeastSkipsFor(finalConfiguration, finalState, potentialPath);
 		
 		for(AllSyncReplayResult result : replayResult)
 			traceFitness = traceFitness += (result.getInfo().get(PNMatchInstancesRepResult.TRACEFITNESS) * result.getTraceIndex().size());
@@ -86,7 +106,7 @@ public class ConstructPSP {
 	public ConstructPSP(String path, String logfile, String modelfile, boolean toDot) throws Exception
 	{
 		long start = System.nanoTime();
-		int i = 1;
+		//int i = 1;
 		logAutomaton = new ImportEventLog().convertLogToAutomatonFrom(path + "/" + logfile);
 		if(toDot)
 			logAutomaton.toDot(path + "/" + logfile.substring(0, logfile.length()-4) + ".dot");
@@ -96,7 +116,7 @@ public class ConstructPSP {
 			modelAutomaton = new ImportProcessModel().createFSMfromPNMLFile(path + "/" + modelfile, logAutomaton.eventLabels(), logAutomaton.inverseEventLabels());
 		//System.out.println(modelAutomaton.finalConfigurations());
 		else
-			modelAutomaton = new ImportProcessModel().createFSMfromBPNMFile(path + "/" + modelfile, logAutomaton.eventLabels(), logAutomaton.inverseEventLabels());
+			modelAutomaton = new ImportProcessModel().createFSMfromBPNMFileWithConversion(path + "/" + modelfile, logAutomaton.eventLabels(), logAutomaton.inverseEventLabels());
 		if(toDot)
 			modelAutomaton.toDot(path + "/" + modelfile.substring(0, modelfile.length()-5) + ".dot");
 		long modelTime = System.nanoTime();
@@ -110,7 +130,7 @@ public class ConstructPSP {
 		source.configuration().logIDs().add(logAutomaton.sourceID()); source.configuration().modelIDs().add(modelAutomaton.sourceID());
 		psp = new PSP(HashBiMap.create(), new HashSet<Arc>(), source.hashCode(), logAutomaton, modelAutomaton);
 		psp.nodes().put(source.hashCode(), source);
-		PrintWriter pw = new PrintWriter(path + "/debugging.txt");
+		//PrintWriter pw = new PrintWriter(path + "/debugging.txt");
 		System.out.println("Labels in the log: ");
 		System.out.println(logAutomaton.eventLabels());
 		System.out.println("Labels in the Model: ");
@@ -118,7 +138,7 @@ public class ConstructPSP {
 		for(int finalState : logAutomaton.finalConfigurations().keySet())
 			for(Multiset<Integer> finalConfiguration : logAutomaton.finalConfigurations().get(finalState))
 			{
-				pw.println("iteration: " + i + ", Final State: " + finalState + ", final Configuration: " + finalConfiguration);
+				//pw.println("iteration: " + i + ", Final State: " + finalState + ", final Configuration: " + finalConfiguration);
 //				source = new Node(logAutomaton.sourceID(), modelAutomaton.sourceID(), 
 //						new Configuration(new IntArrayList(), new IntArrayList(), new ArrayList<Couple<Integer, Integer>>(), new ArrayList<psp.Transition>(), 
 //								new IntArrayList(), new IntArrayList()), 0);
@@ -127,20 +147,21 @@ public class ConstructPSP {
 //				psp.nodes().put(source.hashCode(), source);
 				for(IntArrayList potentialPath : logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).keySet())
 				{
-					pw.println("potential path: " + potentialPath + "; trace labels: " + logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).get(potentialPath));
+					//pw.println("potential path: " + potentialPath + "; trace labels: " + logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).get(potentialPath));
+					
 					System.out.println("potential path: " + potentialPath + "; trace labels: " + logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).get(potentialPath));
 					this.calculatePartiallySynchronizedPathWithLeastSkipsFor(finalConfiguration, finalState, potentialPath); //, pw);
 				}
-				if(toDot)
-					psp.toDot(path + "/simplePSP" + i + ".dot");
-				i++;
+//				if(toDot)
+//					psp.toDot(path + "/simplePSP" + i + ".dot");
+//				i++;
 			}
 				
 		if(toDot)
 			psp.toDot(path + "/simplePSP.dot");
 		long tpsp = System.nanoTime();
 		System.out.println("Automata synchronization: " + TimeUnit.MILLISECONDS.convert((tpsp - modelTime), TimeUnit.NANOSECONDS) + "ms");
-		pw.close();
+		//pw.close();
 		//pw.close();
 //		System.out.println("Prefix Memorization table:");
 //		for(IntArrayList prefix : prefixMemorizationTable.keySet())
@@ -179,7 +200,7 @@ public class ConstructPSP {
 		Node potentialNode;
 		double numStates = 1;
 		
-		this.optimalModelFutures(finalConfiguration);
+		//this.optimalModelFutures(finalConfiguration);
 		
 		List<IntArrayList> commonPrefixes= this.traceContainsCommonPrefix(logAutomaton.states().get(finalState).potentialPathsAndTraceLabels().get(finalConfiguration).get(potentialPath));
 		if(!commonPrefixes.isEmpty())
@@ -601,71 +622,71 @@ public class ConstructPSP {
 		if(!logPossibleFutures.contains(finalConfigLog))
 			return Math.abs(Integer.MAX_VALUE);
 		int futureSkips = finalConfigLog.size();
-//		for(int modfinalState : modelAutomaton.finalStates().toArray())
-//		{
-//			Set<Multiset<Integer>> possibleFuturesModel = null;
-//			if((possibleFuturesModel = modelAutomaton.states().get(stateModelID).possibleFutures().get(modfinalState)) != null)
-//			{
-//				for(Multiset<Integer> possibleFutureModel : possibleFuturesModel)
-//				{
-//					Multiset<Integer> futureLogSkips = Multisets.difference(finalConfigLog, possibleFutureModel);
-//					Multiset<Integer> futureModelSkips = HashMultiset.create(possibleFutureModel);
-//					futureModelSkips.setCount(modelAutomaton.skipEvent(), 0);
-//					
-//					Iterator<Integer> it = futureModelSkips.elementSet().iterator();
-//					while(it.hasNext())
-//					{
-//						int element = it.next();
-//						if(futureModelSkips.count(element) >= 100 && Math.round(futureModelSkips.count(element) / 100) % 2 == 0)
-//							futureModelSkips.setCount(element, 1 + (futureModelSkips.count(element) % 100));
-//						else if(futureModelSkips.count(element) >= 100)
-//						{
-//							int count = (futureModelSkips.count(element) % 100);
-//							if(count==0)
-//								it.remove();
-//							futureModelSkips.setCount(element, count);
-//						}
-//					}
-//					futureModelSkips = Multisets.difference(futureModelSkips, finalConfigLog);
-//					//pw.println(futureLog + " - " + possibleFutureModel + " = " + futureLogSkips);
-//					futureSkips = Math.min(futureSkips, futureLogSkips.size() + futureModelSkips.size());
-//					if(futureSkips==0) break;
-//				}
-//			}
-//			if(futureSkips==0) break;
-//		}
-		
 		for(int modfinalState : modelAutomaton.finalStates().toArray())
 		{
-			for(Multiset<Integer> optimalModelFuture : this.optimalModelFutures.get(modfinalState))
+			Set<Multiset<Integer>> possibleFuturesModel = null;
+			if((possibleFuturesModel = modelAutomaton.states().get(stateModelID).possibleFutures().get(modfinalState)) != null)
 			{
-				if(!modelAutomaton.states().get(stateModelID).possibleFutures().get(modfinalState).contains(optimalModelFuture))
-					continue;
-				Multiset<Integer> futureLogSkips = Multisets.difference(finalConfigLog, optimalModelFuture);
-				Multiset<Integer> futureModelSkips = HashMultiset.create(optimalModelFuture);
-				futureModelSkips.setCount(modelAutomaton.skipEvent(), 0);
-				
-				Iterator<Integer> it = futureModelSkips.elementSet().iterator();
-				while(it.hasNext())
+				for(Multiset<Integer> possibleFutureModel : possibleFuturesModel)
 				{
-					int element = it.next();
-					if(futureModelSkips.count(element) >= 100 && Math.round(futureModelSkips.count(element) / 100) % 2 == 0)
-						futureModelSkips.setCount(element, 1 + (futureModelSkips.count(element) % 100));
-					else if(futureModelSkips.count(element) >= 100)
+					Multiset<Integer> futureLogSkips = Multisets.difference(finalConfigLog, possibleFutureModel);
+					Multiset<Integer> futureModelSkips = HashMultiset.create(possibleFutureModel);
+					futureModelSkips.setCount(modelAutomaton.skipEvent(), 0);
+					
+					Iterator<Integer> it = futureModelSkips.elementSet().iterator();
+					while(it.hasNext())
 					{
-						int count = (futureModelSkips.count(element) % 100);
-						if(count==0)
-							it.remove();
-						futureModelSkips.setCount(element, count);
+						int element = it.next();
+						if(futureModelSkips.count(element) >= 100 && Math.round(futureModelSkips.count(element) / 100) % 2 == 0)
+							futureModelSkips.setCount(element, 1 + (futureModelSkips.count(element) % 100));
+						else if(futureModelSkips.count(element) >= 100)
+						{
+							int count = (futureModelSkips.count(element) % 100);
+							if(count==0)
+								it.remove();
+							futureModelSkips.setCount(element, count);
+						}
 					}
+					futureModelSkips = Multisets.difference(futureModelSkips, finalConfigLog);
+					//pw.println(futureLog + " - " + possibleFutureModel + " = " + futureLogSkips);
+					futureSkips = Math.min(futureSkips, futureLogSkips.size() + futureModelSkips.size());
+					if(futureSkips==0) break;
 				}
-				futureModelSkips = Multisets.difference(futureModelSkips, finalConfigLog);
-				//pw.println(futureLog + " - " + possibleFutureModel + " = " + futureLogSkips);
-				futureSkips = Math.min(futureSkips, futureLogSkips.size() + futureModelSkips.size());
-				if(futureSkips==0) break;
 			}
 			if(futureSkips==0) break;
 		}
+		
+//		for(int modfinalState : modelAutomaton.finalStates().toArray())
+//		{
+//			for(Multiset<Integer> optimalModelFuture : this.optimalModelFutures.get(modfinalState))
+//			{
+//				if(!modelAutomaton.states().get(stateModelID).possibleFutures().get(modfinalState).contains(optimalModelFuture))
+//					continue;
+//				Multiset<Integer> futureLogSkips = Multisets.difference(finalConfigLog, optimalModelFuture);
+//				Multiset<Integer> futureModelSkips = HashMultiset.create(optimalModelFuture);
+//				futureModelSkips.setCount(modelAutomaton.skipEvent(), 0);
+//				
+//				Iterator<Integer> it = futureModelSkips.elementSet().iterator();
+//				while(it.hasNext())
+//				{
+//					int element = it.next();
+//					if(futureModelSkips.count(element) >= 100 && Math.round(futureModelSkips.count(element) / 100) % 2 == 0)
+//						futureModelSkips.setCount(element, 1 + (futureModelSkips.count(element) % 100));
+//					else if(futureModelSkips.count(element) >= 100)
+//					{
+//						int count = (futureModelSkips.count(element) % 100);
+//						if(count==0)
+//							it.remove();
+//						futureModelSkips.setCount(element, count);
+//					}
+//				}
+//				futureModelSkips = Multisets.difference(futureModelSkips, finalConfigLog);
+//				//pw.println(futureLog + " - " + possibleFutureModel + " = " + futureLogSkips);
+//				futureSkips = Math.min(futureSkips, futureLogSkips.size() + futureModelSkips.size());
+//				if(futureSkips==0) break;
+//			}
+//			if(futureSkips==0) break;
+//		}
 		//pw.println(futureSkips);
 		return futureSkips;
 	}
@@ -753,7 +774,7 @@ public class ConstructPSP {
 					}
 					futureModelSkips = Multisets.difference(futureModelSkips, finalConfiguration);
 					//pw.println(futureLog + " - " + possibleFutureModel + " = " + futureLogSkips);
-					futureSkips = Math.min(futureSkips, futureLogSkips.size() + futureModelSkips.size());
+					futureSkips = futureLogSkips.size() + futureModelSkips.size();
 					if((sameCostFinalConfigurations = costToFinalConfigurationMapping.get(futureSkips))==null)
 					{
 						sameCostFinalConfigurations = new UnifiedSet<Multiset<Integer>>();
@@ -763,6 +784,9 @@ public class ConstructPSP {
 				}
 			}
 			this.optimalModelFutures.put(modfinalState,costToFinalConfigurationMapping.get(costToFinalConfigurationMapping.keySet().min()));
+			System.out.println(costToFinalConfigurationMapping.keySet().min());
+			System.out.println(finalConfiguration);
+			System.out.println(this.optimalModelFutures.get(modfinalState));
 		}
 	}
 }

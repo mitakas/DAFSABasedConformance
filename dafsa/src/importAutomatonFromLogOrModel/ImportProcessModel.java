@@ -38,6 +38,26 @@ import com.google.common.collect.HashBiMap;
 import com.raffaeleconforti.context.FakePluginContext;
 import com.raffaeleconforti.conversion.bpmn.BPMNToPetriNetConverter;
 
+/*
+ * Copyright © 2009-2017 The Apromore Initiative.
+ *
+ * This file is part of "Apromore".
+ *
+ * "Apromore" is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * "Apromore" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program.
+ * If not, see <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ */
+
 public class ImportProcessModel 
 {
 	private BiMap<String, Integer> stateLabelMapping;
@@ -83,7 +103,128 @@ public class ImportProcessModel
 		return model;
 	}
 	
-	public Automaton.Automaton createFSMfromBPNMFile(String fileName, Map<Integer, String> eventLabelMapping, Map<String, Integer> inverseLabelMapping) throws Exception
+//	public Automaton.Automaton createFSMfromBPNMFile(String fileName, Map<Integer, String> eventLabelMapping, Map<String, Integer> inverseLabelMapping) throws Exception
+//	{	
+//		FakePluginContext context = new FakePluginContext();
+//		Bpmn bpmn = (Bpmn) new BpmnImportPlugin().importFile(context, fileName);
+//		long start = System.nanoTime();
+//		BpmnSelectDiagramParameters parameters = new BpmnSelectDiagramParameters();
+//		@SuppressWarnings("unused")
+//		BpmnSelectDiagramDialog dialog = new BpmnSelectDiagramDialog(bpmn.getDiagrams(), parameters);
+//		BPMNDiagram newDiagram = BPMNDiagramFactory.newBPMNDiagram("");
+//		Map<String, BPMNNode> id2node = new HashMap<String, BPMNNode>();
+//		Map<String, Swimlane> id2lane = new HashMap<String, Swimlane>();
+//		if (parameters.getDiagram() == BpmnSelectDiagramParameters.NODIAGRAM) {
+//			bpmn.unmarshall(newDiagram, id2node, id2lane);
+//		} else {
+//			Collection<String> elements = parameters.getDiagram().getElements();
+//			bpmn.unmarshall(newDiagram, elements, id2node, id2lane);
+//		}
+//		UnifiedSet<BPMNNode> source = new UnifiedSet<BPMNNode>();
+//		for(BPMNNode node : newDiagram.getNodes())
+//			if(newDiagram.getInEdges(node).isEmpty()) source.add(node);
+//		
+//		ArrayList<BPMNNode> toBeVisited = new ArrayList<BPMNNode>();
+//		UnifiedSet<BPMNNode> visited = new UnifiedSet<BPMNNode>();
+//		BPMNNode curNode = null;
+//		
+//		this.stateLabelMapping = HashBiMap.create();
+//		if(eventLabelMapping.isEmpty())
+//			this.eventLabelMapping = HashBiMap.create();
+//		else
+//			this.eventLabelMapping = HashBiMap.create(eventLabelMapping);
+//		if(inverseLabelMapping.isEmpty())
+//			this.inverseEventLabelMapping = HashBiMap.create();
+//		else
+//			this.inverseEventLabelMapping = HashBiMap.create(inverseLabelMapping);
+//		this.stateMapping = HashBiMap.create();
+//		this.transitionMapping = HashBiMap.create();
+//		
+//		this.finalStates = new IntHashSet();
+//		
+//		int iState = 0;
+//		int iEvent = this.eventLabelMapping.size();
+//		int iTransition = 0;
+//		IntHashSet modelEventLabels = new IntHashSet();
+//		Integer rkey;
+//		
+//		this.stateMapping.put(++iState, new Automaton.State(iState, true, false));
+//		this.iSource = iState;
+//		for(BPMNNode sourceNode : source)
+//			if(visited.add(sourceNode))
+//				toBeVisited.add(sourceNode);
+//		
+//		while(!toBeVisited.isEmpty())
+//		{
+//			curNode = toBeVisited.remove(0);
+//			System.out.println("'_' " + curNode.getLabel());
+//			for (BPMNEdge<? extends BPMNNode, ? extends BPMNNode> edge : newDiagram.getOutEdges(curNode))
+//			{
+//				this.stateMapping.put(++iState, new Automaton.State(iState, false, edge.getGraph().getOutEdges(edge.getTarget()).isEmpty()));
+//				this.stateLabelMapping.put("" + edge.getEdgeID(), iState);
+//				
+//				if(edge.getGraph().getOutEdges(edge.getTarget()).isEmpty()){this.finalStates.add(iState);}
+//				
+//				if((rkey = this.inverseEventLabelMapping.get(curNode.getLabel())) == null)
+//				{
+//					iEvent++;
+//					rkey = iEvent;
+//					this.inverseEventLabelMapping.put(curNode.getLabel(), iEvent);
+//					this.eventLabelMapping.put(iEvent, curNode.getLabel());
+//					if(curNode.getLabel().isEmpty())
+//						skipEvent = iEvent;
+//				}
+//				modelEventLabels.add(rkey);
+//				
+//				if(curNode.getGraph().getInEdges(curNode).isEmpty())
+//				{
+//					this.transitionMapping.put(++iTransition, new Automaton.Transition(this.stateMapping.get(this.iSource), 
+//							this.stateMapping.get(this.stateLabelMapping.get("" + edge.getEdgeID())), rkey));
+//					this.stateMapping.get(this.iSource).outgoingTransitions().add(this.transitionMapping.get(iTransition));
+//					this.stateMapping.get(this.stateLabelMapping.get("" + edge.getEdgeID())).incomingTransitions().add(this.transitionMapping.get(iTransition));
+//				}
+//				else
+//				{
+//					for(BPMNEdge<? extends BPMNNode, ? extends BPMNNode> inEdge : newDiagram.getInEdges(curNode))
+//					{
+//						Automaton.State state = null;
+//						if((state = this.stateMapping.get( this.stateLabelMapping.get(""+inEdge.getEdgeID()))) == null)
+//								System.out.println("Error");
+//						this.transitionMapping.put(++iTransition, new Automaton.Transition( state, 
+//								this.stateMapping.get(this.stateLabelMapping.get("" + edge.getEdgeID())), rkey));
+//						state.outgoingTransitions().add(this.transitionMapping.get(iTransition));
+//						this.stateMapping.get(this.stateLabelMapping.get(""+edge.getEdgeID())).incomingTransitions().add(this.transitionMapping.get(iTransition));
+//					}
+//				}
+//				if(edge.getGraph().getInEdges(edge.getTarget()).size()>1)
+//				{
+//					boolean shouldVisit = true;
+//					for(BPMNEdge<? extends BPMNNode, ? extends BPMNNode> inEdge : newDiagram.getInEdges(edge.getTarget()))
+//						if(!this.stateLabelMapping.containsKey(""+inEdge.getEdgeID())) {shouldVisit = false; break;}
+//					if(shouldVisit && visited.add(edge.getTarget()))
+//						toBeVisited.add(edge.getTarget());
+//				} else 
+//				{
+//					if(visited.add(edge.getTarget()))
+//						toBeVisited.add(edge.getTarget());
+//				}
+//				
+//			}
+//		}
+//			
+//		Set<Integer> keySet = new HashSet<Integer>();
+//		keySet.addAll(this.eventLabelMapping.keySet()); 
+//		for(int key : keySet)
+//			if(!modelEventLabels.contains(key))
+//				this.eventLabelMapping.remove(key);
+//		this.removeTauTransitions();
+//		Automaton.Automaton model = new Automaton.Automaton(this.stateMapping, this.eventLabelMapping, this.inverseEventLabelMapping, this.transitionMapping, iSource, this.finalStates, skipEvent);//, ImportPetriNet.readFile());
+//		long modelTime = System.nanoTime();
+//		System.out.println("Model automaton creation: " + TimeUnit.MILLISECONDS.convert((modelTime - start), TimeUnit.NANOSECONDS) + "ms");
+//		return model;
+//	}
+	
+	public Automaton.Automaton createFSMfromBPNMFileWithConversion(String fileName, Map<Integer, String> eventLabelMapping, Map<String, Integer> inverseLabelMapping) throws Exception
 	{	
 		FakePluginContext context = new FakePluginContext();
 		Bpmn bpmn = (Bpmn) new BpmnImportPlugin().importFile(context, fileName);

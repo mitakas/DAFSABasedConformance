@@ -19,38 +19,45 @@ import psp.ConstructPSP;
 public class Main {
 	public static void main(String[] args) throws Exception
 	{
-		String path = "ibm_doubleLogs2";
-//		String log = "RoadFines_real.xes";
-//		String model = "Traffic fines_loop.pnml";
-		//new EvaluationTest(path, log, model);
 		
-		File folder = new File(path);
-		File[] pnmlFiles = folder.listFiles(new FilenameFilter(){
-			public boolean accept(File dir, String name)
-			{
-				//return name.endsWith(".pnml");
-				return name.endsWith("c.s00000044__s00001066.pnml");
-			}
-		});
-		for(File pnml : pnmlFiles)
-		{
-			File[] logFiles = folder.listFiles(new FilenameFilter()
-			{
-				public boolean accept(File dir, String name)
-				{
-					return name.contains(pnml.getName().substring(0,pnml.getName().length()-5)) && name.endsWith(".xes");
-				}
-			});
-			System.out.println(pnml.getName());
-			for(File xes : logFiles)
-			{
-				System.out.println(xes.getName());
-				new EvaluationTest(path, xes.getName(), pnml.getName());
-				//new ConstructPSP(path, xes.getName(), pnml.getName(), true);
-			}
-			System.out.println();
-		}
-
+		String path = "/Users/daniel/Documents/workspace/Master thesis paper tests/Road Traffic";
+		String log = "RoadFines_real.xes";
+		String model = "Traffic fines_loop.pnml";
+		new EvaluationTest(path, log, model);
+		//new ConstructPSP(path, log, model, true);
+		
+		//String path = "ibm_doubleLogs2";
+		//System.out.println("IBM Collection:");
+//		File folder = new File(path);
+//		File[] pnmlFiles = folder.listFiles(new FilenameFilter(){
+//			public boolean accept(File dir, String name)
+//			{
+//				//return name.endsWith(".pnml");
+//				return name.endsWith("c.s00000044__s00001066.pnml");
+//			}
+//		});
+//		for(File pnml : pnmlFiles)
+//		{
+//			File[] logFiles = folder.listFiles(new FilenameFilter()
+//			{
+//				public boolean accept(File dir, String name)
+//				{
+//					return name.contains(pnml.getName().substring(0,pnml.getName().length()-5)) && name.endsWith("20.xes");
+//				}
+//			});
+//			System.out.println(pnml.getName());
+//			for(File xes : logFiles)
+//			{
+//				System.out.println(xes.getName());
+//				//new EvaluationTest(path, xes.getName(), pnml.getName());
+//				//new ConstructPSP(path, xes.getName(), pnml.getName(), true);
+//				//new AlignmentTest( new ImportEventLog() );
+//			}
+//			System.out.println();
+//		}
+		
+		
+		
 //		path = "sap_tauless2";
 //		System.out.println("SAP Collection:");
 //		folder = new File(path);

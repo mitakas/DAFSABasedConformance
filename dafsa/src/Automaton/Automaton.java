@@ -1,11 +1,10 @@
 package Automaton;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -14,6 +13,7 @@ import java.util.Set;
 
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 import com.google.common.collect.HashMultiset;
@@ -58,7 +58,7 @@ public class Automaton {
 	}
 	
 	public Automaton(Map<Integer, State> states, Map<Integer, String> eventLabels, Map<String, Integer> inverseEventLabels, Map<Integer, Transition> transitions,
-			int initialState, IntHashSet FinalStates, int skipEvent) throws FileNotFoundException
+			int initialState, IntHashSet FinalStates, int skipEvent) throws IOException
 	{
 		this.states = states;
 		this.eventLabels = eventLabels;
@@ -67,6 +67,7 @@ public class Automaton {
 		this.source = initialState;
 		this.finalStates = FinalStates;
 		this.skipEvent = skipEvent;
+		//this.toDot("/Users/daniel/Documents/workspace/Master thesis paper tests/Road Traffic/Traffic fines_loop.dot");
 		this.discoverFinalConfigurations(false);
 	}
 	
@@ -177,10 +178,12 @@ public class Automaton {
 	        for (int i = 0; i < m; i++)
 	            components[i] = new PriorityQueue<Integer>();
 	        
-	        for (int v = 1; v < this.states().size()+1; v++)
+	        for (int v = 1; v < Collections.max(this.states().keySet())+1; v++)
 	        {
 	            components[scc.id(v)].offer(v);
-	            this.states().get(v).setComponent(scc.id(v));
+	            State state = null;
+	            if((state = this.states().get(v)) != null)
+	            	state.setComponent(scc.id(v));
 	        }
 	
 	        // print results
@@ -200,7 +203,9 @@ public class Automaton {
 	        	if(components[i].size()>=2)
 	        		for(int state : components[i])
 	        		{
-	        			for(Transition tr : this.states().get(state).incomingTransitions())
+	        			State cState = null;
+	        			if((cState = this.states().get(state))==null) continue;
+	        			for(Transition tr : cState.incomingTransitions())
 	        			{
 	        				if(!components[i].contains(tr.source().id()))
 	        				{
@@ -283,7 +288,7 @@ public class Automaton {
 	        	Set<Multiset<Integer>> possibleFutures = null;
 	        	if((possibleFutures = this.states().get(finalState).possibleFutures().get(finalState)) == null)
 	        	{
-	        		possibleFutures = new HashSet<Multiset<Integer>>();
+	        		possibleFutures = new UnifiedSet<Multiset<Integer>>();
 	        		this.states().get(finalState).possibleFutures().put(finalState, possibleFutures);
 	        	}
 				for(Transition tr : compIncomingTransitions.get(this.states().get(finalState).component()))
@@ -297,7 +302,7 @@ public class Automaton {
 						
 						if((statePossibleFutures = this.states().get(state).possibleFutures().get(finalState)) == null)
 						{
-							statePossibleFutures = new HashSet<Multiset<Integer>>();
+							statePossibleFutures = new UnifiedSet<Multiset<Integer>>();
 							this.states().get(state).possibleFutures().put(finalState, statePossibleFutures);
 						}
 						statePossibleFutures.add(possibleFuture);
@@ -323,7 +328,7 @@ public class Automaton {
 									Set<Multiset<Integer>> stateCompPossibleFutures = null;
 									if((stateCompPossibleFutures = this.states().get(stateComp).possibleFutures().get(finalState)) == null)
 									{
-										stateCompPossibleFutures = new HashSet<Multiset<Integer>>();
+										stateCompPossibleFutures = new UnifiedSet<Multiset<Integer>>();
 										this.states().get(stateComp).possibleFutures().put(finalState, stateCompPossibleFutures);
 									}
 									stateCompPossibleFutures.add(possibleFuture);
@@ -356,14 +361,14 @@ public class Automaton {
 			{	
 				f_state = this.states().get(finalState); 
 				if(!f_state.possibleFutures().containsKey(finalState))
-					f_state.possibleFutures().put(finalState, new HashSet<Multiset<Integer>>());
+					f_state.possibleFutures().put(finalState, new UnifiedSet<Multiset<Integer>>());
 				for(Transition tr : f_state.incomingTransitions())
 				{
 					possibleFuture = HashMultiset.create(); 
 					possibleFuture.add(tr.eventID());
 					if((possibleFutures = this.states().get(tr.source().id()).possibleFutures().get(finalState)) == null)
 					{
-						possibleFutures = new HashSet<Multiset<Integer>>();
+						possibleFutures = new UnifiedSet<Multiset<Integer>>();
 						this.states().get(tr.source().id()).possibleFutures().put(finalState, possibleFutures);
 					}
 					possibleFutures.add(possibleFuture);
@@ -381,7 +386,7 @@ public class Automaton {
 							possibleFuture.add(tr.eventID());
 							if((possibleFutures = trSource.possibleFutures().get(finalState)) == null)
 							{
-								possibleFutures = new HashSet<Multiset<Integer>>();
+								possibleFutures = new UnifiedSet<Multiset<Integer>>();
 								trSource.possibleFutures().put(finalState, possibleFutures);
 							}
 							possibleFutures.add(possibleFuture);

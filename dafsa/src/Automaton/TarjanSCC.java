@@ -1,5 +1,6 @@
 package Automaton;
 
+import java.util.Collections;
 import java.util.Stack;
 
 public class TarjanSCC {
@@ -17,10 +18,10 @@ public class TarjanSCC {
      * @param G the digraph
      */
     public TarjanSCC(Automaton G) {
-        marked = new boolean[G.states().size()+1];
+        marked = new boolean[Collections.max(G.states().keySet())+1];
         stack = new Stack<Integer>();
-        id = new int[G.states().size()+1]; 
-        low = new int[G.states().size()+1];
+        id = new int[Collections.max(G.states().keySet())+1]; 
+        low = new int[Collections.max(G.states().keySet())+1];
         for (int v :  G.states().keySet()) 
         {
             if (!marked[v]) dfs(G, v);
@@ -37,7 +38,7 @@ public class TarjanSCC {
         stack.push(v);
         for (Transition tr : G.states().get(v).outgoingTransitions()) 
         {
-            if (!marked[tr.target().id()]) dfs(G, tr.target().id());
+        	if (!marked[tr.target().id()]) dfs(G, tr.target().id());
             if (low[tr.target().id()] < min) min = low[tr.target().id()];
         }
         if (min < low[v]) 

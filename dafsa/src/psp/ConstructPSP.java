@@ -595,9 +595,10 @@ public class ConstructPSP {
 		Multiset<Integer> finalConfigLog = Multisets.difference(finalConfigurationLog, configuration.setMoveOnLog());
 		if(stateLogID == finalState && finalConfigLog.isEmpty())
 			return 0;
-		if(!logAutomaton.states().get(stateLogID).possibleFutures().containsKey(finalState)) 
+		Set<Multiset<Integer>> logPossibleFutures = null;
+		if((logPossibleFutures = logAutomaton.states().get(stateLogID).possibleFutures().get(finalState)) == null) 
 			return Math.abs(Integer.MAX_VALUE);
-		if(!logAutomaton.states().get(stateLogID).possibleFutures().get(finalState).contains(finalConfigLog))
+		if(!logPossibleFutures.contains(finalConfigLog))
 			return Math.abs(Integer.MAX_VALUE);
 		int futureSkips = finalConfigLog.size();
 //		for(int modfinalState : modelAutomaton.finalStates().toArray())

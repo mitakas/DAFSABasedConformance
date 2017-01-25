@@ -21,7 +21,7 @@ public class EvaluationTest
 {
 	public EvaluationTest(String path, String log, String model) throws Exception
 	{
-		PrintWriter pw = new PrintWriter(path + "/Evaluation results/evaluationResults_" + model.substring(0,model.lastIndexOf(".")-1) + log.substring(0, log.lastIndexOf(".")-1) + ".csv");
+		PrintWriter pw = new PrintWriter(path + "/Evaluation results/evaluationResults_" + model.substring(0,model.lastIndexOf(".")) + log.substring(0, log.lastIndexOf(".")) + ".csv");
 		PrintWriter pw2 = new PrintWriter(path + "/Evaluation results/comparingAlignmentResults_" + model.substring(0,model.lastIndexOf(".")-1) + log.substring(0, log.lastIndexOf(".")-1) + ".txt");
 		XLog xLog = new ImportEventLog().importEventLog(path + "/" + log);
 		PetrinetGraph net = AlignmentTest.constructNet(path + "/" + model);
@@ -97,6 +97,9 @@ public class EvaluationTest
 			System.out.println(performanceAlignments.average());
 			System.out.println(preparationDAFSA.average());
 			System.out.println(performanceDAFSA.average());
+			System.out.println(allOptimal.mapping);
+			System.out.println(psp.psp().logAutomaton().eventLabels());
+			System.out.println(psp.psp().modelAutomaton().eventLabels());
 		}	
 	}
 }

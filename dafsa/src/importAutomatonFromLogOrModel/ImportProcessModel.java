@@ -1,13 +1,15 @@
 package importAutomatonFromLogOrModel;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.processmining.framework.connections.ConnectionCannotBeObtained;
 import org.processmining.models.connections.petrinets.behavioral.FinalMarkingConnection;
@@ -44,6 +46,8 @@ public class ImportProcessModel
 	private BiMap<Integer, Automaton.State> stateMapping;
 	private BiMap<Integer, Automaton.Transition> transitionMapping;
 	private IntHashSet finalStates;
+	private int iSource = 0;
+	private int skipEvent = -2;
 	
 	public Object[] importPetriNetAndMarking(String fileName) throws Exception
 	{
@@ -52,7 +56,7 @@ public class ImportProcessModel
 		return (Object[]) imp.importFile(context, fileName);
 	}
 	
-	public Automaton.Automaton createFSMfromPetrinet(Petrinet pnet, Marking marking, Map<Integer, String> eventLabelMapping, Map<String, Integer> inverseEventLabelMapping) throws ConnectionCannotBeObtained, FileNotFoundException
+	public Automaton.Automaton createFSMfromPetrinet(Petrinet pnet, Marking marking, Map<Integer, String> eventLabelMapping, Map<String, Integer> inverseEventLabelMapping) throws ConnectionCannotBeObtained, IOException
 	{
 		//long start = System.nanoTime();
 		Object[] object = new TSGenerator().calculateTS(new FakePluginContext(), pnet, marking);
@@ -118,7 +122,7 @@ public class ImportProcessModel
 		
 	}
 	
-	public Automaton.Automaton convertReachabilityGraphToFSM(Petrinet pnet, ReachabilityGraph pnet_rg, Map<Integer, String> eventLabels, Map<String, Integer> inverseEventLabels) throws FileNotFoundException
+	public Automaton.Automaton convertReachabilityGraphToFSM(Petrinet pnet, ReachabilityGraph pnet_rg, Map<Integer, String> eventLabels, Map<String, Integer> inverseEventLabels) throws IOException
 	{
 		
 		this.stateLabelMapping = HashBiMap.create();
@@ -132,9 +136,8 @@ public class ImportProcessModel
 			this.inverseEventLabelMapping = HashBiMap.create(inverseEventLabels);
 		this.stateMapping = HashBiMap.create();
 		this.transitionMapping = HashBiMap.create();
-		int iSource = 0;
+		
 		this.finalStates = new IntHashSet();
-		int skipEvent = -2;
 		
 		int iState = 0;
 		int iEvent = this.eventLabelMapping.size();
@@ -206,7 +209,84 @@ public class ImportProcessModel
 		for(int key : keySet)
 			if(!modelEventLabels.contains(key))
 				this.eventLabelMapping.remove(key);
+		this.removeTauTransitions();
 		return new Automaton.Automaton(this.stateMapping, this.eventLabelMapping, this.inverseEventLabelMapping, this.transitionMapping, iSource, this.finalStates, skipEvent);//, ImportPetriNet.readFile());
+	}
+	
+	public void removeTauTransitions()
+	{
+		IntArrayList toBeVisited = new IntArrayList();
+		IntHashSet visited = new IntHashSet();
+		
+		for(int finalState : this.finalStates.toArray())
+		{
+			Automaton.State fState = this.stateMapping.get(finalState);
+			Iterator<Automaton.Transition> it = fState.incomingTransitions().iterator();
+			while(it.hasNext())
+			{
+				Automaton.Transition tr = it.next();
+//				if(tr.eventID()==skipEvent)
+//				{
+//					for(Automaton.Transition repTr : tr.target().outgoingTransitions())
+//					{
+//						if(repTr.eventID()==skipEvent) continue;
+//						Automaton.Transition newTr = new Automaton.Transition(tr.source(), repTr.target(), repTr.eventID());
+//						tr.source().outgoingTransitions().add(newTr);
+//						repTr.target().incomingTransitions().add(newTr);
+//						this.transitionMapping.put(transitionMapping.keySet().size(), newTr);
+//					}
+//					tr.source().outgoingTransitions().remove(tr);
+//					//tr.target().incomingTransitions().remove(tr);
+//					it.remove();
+//					this.transitionMapping.remove(tr);
+//				}
+				if(visited.add(tr.source().id()))
+					toBeVisited.add(tr.source().id());
+			}
+		}
+		
+		while(!toBeVisited.isEmpty())
+		{
+			Automaton.State state = this.stateMapping.get(toBeVisited.removeAtIndex(0));
+			Iterator<Automaton.Transition> it = state.incomingTransitions().iterator();
+			while(it.hasNext())
+			{
+				Automaton.Transition tr = it.next();
+				if(tr.eventID()==skipEvent)
+				{
+					for(Automaton.Transition repTr : tr.target().outgoingTransitions())
+					{
+						if(repTr.eventID()==skipEvent) continue;
+						Automaton.Transition newTr = new Automaton.Transition(tr.source(), repTr.target(), repTr.eventID());
+						tr.source().outgoingTransitions().add(newTr);
+						repTr.target().incomingTransitions().add(newTr);
+						this.transitionMapping.put(transitionMapping.keySet().size(), newTr);
+					}
+					tr.source().outgoingTransitions().remove(tr);
+					//tr.target().incomingTransitions().remove(tr);
+					it.remove();
+					this.transitionMapping.remove(tr);
+				}
+				if(visited.add(tr.source().id()))
+					toBeVisited.add(tr.source().id());
+			}
+		}
+		
+		Iterator<Automaton.State> it = this.stateMapping.values().iterator();
+		while(it.hasNext())
+		{
+			Automaton.State state = it.next();
+			if(state.incomingTransitions().isEmpty() && !state.isSource())
+			{
+				for(Automaton.Transition tr : state.outgoingTransitions())
+				{
+					tr.target().incomingTransitions().remove(tr);
+					this.transitionMapping.remove(tr);
+				}
+				it.remove();
+				//this.stateMapping.remove(state);
+			}
+		}
 	}
 	
 //	private static Map<Integer, Set<IntHashSet>> readFile() {

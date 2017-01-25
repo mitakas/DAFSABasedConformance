@@ -19,7 +19,8 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.graphbased.directed.petrinet.impl.PetrinetFactory;
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
-import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsGraphILPAlg;
+//import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsGraphILPAlg;
+import org.processmining.plugins.petrinet.replayer.matchinstances.algorithms.express.AllOptAlignmentsTreeAlg;
 import org.processmining.plugins.petrinet.replayresult.PNMatchInstancesRepResult;
 import org.processmining.plugins.replayer.replayresult.AllSyncReplayResult;
 
@@ -27,6 +28,7 @@ import nl.tue.astar.AStarException;
 
 public class AlignmentTest 
 {
+	public TransEvClassMapping mapping = null;
 	public static int iteration = 0;
 	public PNMatchInstancesRepResult replayResult;
 	public double cost;
@@ -48,7 +50,7 @@ public class AlignmentTest
 		Marking[] finalMarkings = null; // only one marking is used so far
 		Map<Transition, Integer> costMOS = null; // movements on system
 		Map<XEventClass, Integer> costMOT = null; // movements on trace
-		TransEvClassMapping mapping = null;
+		
 		
 		initialMarking = getInitialMarking(net);
 		finalMarkings = getFinalMarkings(net);
@@ -57,7 +59,7 @@ public class AlignmentTest
 		//			log = XFactoryRegistry.instance().currentDefault().openLog();
 		costMOS = constructMOSCostFunction(net);
 		XEventClass dummyEvClass = new XEventClass("DUMMY", 99999);
-		XEventClassifier eventClassifier = XLogInfoImpl.STANDARD_CLASSIFIER;
+		XEventClassifier eventClassifier = XLogInfoImpl.NAME_CLASSIFIER;
 		costMOT = constructMOTCostFunction(net, xLog, eventClassifier, dummyEvClass);
 		mapping = constructMapping(net, xLog, dummyEvClass, eventClassifier);
 //		System.out.println(initialMarking);
@@ -109,7 +111,7 @@ public class AlignmentTest
 		//			log = XFactoryRegistry.instance().currentDefault().openLog();
 		costMOS = constructMOSCostFunction(net);
 		XEventClass dummyEvClass = new XEventClass("DUMMY", 99999);
-		XEventClassifier eventClassifier = XLogInfoImpl.STANDARD_CLASSIFIER;
+		XEventClassifier eventClassifier = XLogInfoImpl.NAME_CLASSIFIER;
 		costMOT = constructMOTCostFunction(net, log, eventClassifier, dummyEvClass);
 		mapping = constructMapping(net, log, dummyEvClass, eventClassifier);
 //		System.out.println(initialMarking);
@@ -144,9 +146,9 @@ public class AlignmentTest
 	public double computeCost(Map<Transition, Integer> costMOS, Map<XEventClass, Integer> costMOT,
 			Marking initialMarking, Marking[] finalMarkings, PluginContext context, PetrinetGraph net, XLog log,
 			TransEvClassMapping mapping, boolean useILP) {
-		AllOptAlignmentsGraphILPAlg replayEngine;
+		AllOptAlignmentsTreeAlg replayEngine;
 //		if (useILP) {
-			replayEngine = new AllOptAlignmentsGraphILPAlg();
+			replayEngine = new AllOptAlignmentsTreeAlg();
 //		} else {
 //			replayEngine = new AllOptAlignmentsGraphAlg();
 //		}
@@ -154,7 +156,7 @@ public class AlignmentTest
 		Object[] parameters = new Object[10]; //new CostBasedCompleteParam(, );
 		parameters[0] = costMOS;
 		parameters[2] = costMOT;
-		parameters[1] = 10001000;//	parameters.setInitialMarking(initialMarking);
+		parameters[1] = 20000; //10001000;//	parameters.setInitialMarking(initialMarking);
 //		parameters.setFinalMarkings(finalMarkings[0]);
 //		parameters.setGUIMode(false);
 //		parameters.setCreateConn(false);
@@ -241,7 +243,6 @@ public class AlignmentTest
 			for (org.jbpt.petri.Place p : sys.getMarkedPlaces()) {
 				net.addArc(t, p2p.get(p));
 			}
-
 		}
 
 		return net;
@@ -309,21 +310,18 @@ public class AlignmentTest
 
 			for (XEventClass evClass : summary.getEventClasses().getClasses()) {
 				String id = evClass.getId();
-				String id2 = id.substring(0, id.indexOf("+"));
+				//String id2 = id.substring(0, id.indexOf("+"));
 				String model = t.getLabel();
-				if (model.equals(id2)) {
+				if (model.equals(id)) {
 					mapping.put(t, evClass);
 					//mapped = true;
 					break;
 				}
 			}
-
 //			if (!mapped && !t.isInvisible()) {
 //				mapping.put(t, dummyEvClass);
 //			}
-
 		}
-
 		return mapping;
 	}
 }
